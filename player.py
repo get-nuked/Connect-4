@@ -36,7 +36,7 @@ class Player:
 
 	def __init__(self, name):
 		self.name = name
-		self.numExpanded = 0  # Use this to track the number of nodes you expand
+		self.numExpanded = 0  # Use this to track the numbser of nodes you expand
 		self.numPruned = 0    # Use this to track the number of times you prune
 
 	def hasImmediateWin(self, gameBoard: Board, player: str) -> bool: 
@@ -119,7 +119,7 @@ class Player:
 		if gameBoard.checkWin():
 			if isMaximizing:  # O just played and won
 				return -math.inf
-			else:
+			else: # X just played and won
 				return math.inf
 
 		if depth == self.maxDepth or gameBoard.checkFull():
@@ -127,30 +127,32 @@ class Player:
 			currentPlayer = "X" if isMaximizing else "O"
 			opponent = "O" if isMaximizing else "X"
 
+			# checking for immediate wins
 			if self.hasImmediateWin(gameBoard, currentPlayer):
 				return math.inf if isMaximizing else -math.inf
 			if self.hasImmediateWin(gameBoard, opponent):
 				return -math.inf if isMaximizing else math.inf
-			# if there isnt a move that leeds to a win
+			
+			# if there isnt an immediate move that leads to a win
 			return self.evaluationFunction(gameBoard)
 
-		if isMaximizing:
+		if isMaximizing: # maximizer's move
 			best = -math.inf
 			for col in range(gameBoard.numColumns):
 				if gameBoard.colFills[col] < gameBoard.numRows:
 					self.numExpanded += 1
 					gameBoard.addPiece(col, "X")
-					value = self.minimax(depth + 1, gameBoard, False)
+					value = self.minimax(depth + 1, gameBoard, False) # recursive call
 					gameBoard.removePiece(col)
-					best = max(best, value)
+					best = max(best, value) 
 			return best
-		else:
+		else: # minimizer's move
 			best = math.inf
 			for col in range(gameBoard.numColumns):
 				if gameBoard.colFills[col] < gameBoard.numRows:
 					self.numExpanded += 1
 					gameBoard.addPiece(col, "O")
-					value = self.minimax(depth + 1, gameBoard, True)
+					value = self.minimax(depth + 1, gameBoard, True) # recursive call
 					gameBoard.removePiece(col)
 					best = min(best, value)
 			return best
@@ -161,16 +163,16 @@ class Player:
 		Docstring for getMoveAlphaBeta
 		
 		:param self: Description
-		:param gameBoard: Description
+		:param gameBoard: game board being considered
 		:type gameBoard: Board
-		:return: Description
+		:return: the most optimal move decided by minimax with alpha-beta pruning
 		:rtype: int
 		"""
 		bestValue = -math.inf
 		bestMove = -1
 			
 		center = gameBoard.numColumns // 2
-		order = sorted(range(gameBoard.numColumns), key=lambda c: abs(c - center))
+		order = sorted(range(gameBoard.numColumns), key=lambda c: abs(c - center)) # column ordering
 		
 		# checking for immediate wins
 		for col in order:
@@ -187,13 +189,13 @@ class Player:
 			if gameBoard.colFills[col] < gameBoard.numRows:
 				self.numExpanded += 1
 				gameBoard.addPiece(col, "X")
-				moveValue = self.minimaxAlphaBeta(1, gameBoard, False, -math.inf, math.inf, order)
+				moveValue = self.minimaxAlphaBeta(1, gameBoard, False, -math.inf, math.inf, order) # calls minimax with alpha-beta recursively for each branch
 				gameBoard.removePiece(col)
-				if moveValue > bestValue:
+				if moveValue > bestValue: # updates the best move
 					bestValue = moveValue
 					bestMove = col
 
-		if bestMove == -1:
+		if bestMove == -1: # fail safe
 			for col in range(gameBoard.numColumns):
 				if gameBoard.colFills[col] < gameBoard.numRows:
 					return col
@@ -206,17 +208,19 @@ class Player:
 		Docstring for minimaxAlphaBeta
 		
 		:param self: Description
-		:param depth: Description
-		:param gameBoard: Description
-		:param isMaximizing: Description
-		:param alpha: Description
-		:param beta: Description
-		:param order: Description
+		:param depth: current depth of minimax
+		:param gameBoard: game board being considered from a branch
+		:param isMaximizing: player being considered (min player or max player (max is minimax ai player))
+		:param alpha: minimum score that the maximizing player is assured of	
+		:param beta: maximum score that the minimizing player is assured of
+		:param order: column ordering for move consideration
+		:return: minimax with alpha-beta pruning
+		:rtype: int
 		"""
 		if gameBoard.checkWin():
 			if isMaximizing:  # O just played and won
 				return -math.inf
-			else:
+			else: # X just played and won
 				return math.inf
 
 		if depth == self.maxDepth or gameBoard.checkFull():
@@ -224,13 +228,16 @@ class Player:
 			currentPlayer = "X" if isMaximizing else "O"
 			opponent = "O" if isMaximizing else "X"
 
+			# checking for immediate wins
 			if self.hasImmediateWin(gameBoard, currentPlayer):
 				return math.inf if isMaximizing else -math.inf
 			if self.hasImmediateWin(gameBoard, opponent):
 				return -math.inf if isMaximizing else math.inf
+
+			# if there isn't an immediate move that leads to a win
 			return self.evaluationFunction(gameBoard)
 
-		if isMaximizing:
+		if isMaximizing: # maximizer's move
 			best = -math.inf
 			for col in order:
 				if gameBoard.colFills[col] < gameBoard.numRows:
@@ -245,7 +252,7 @@ class Player:
 						self.numPruned += 1
 						return best
 			return best
-		else:
+		else: # minimizer's move
 			best = math.inf
 			for col in order:
 				if gameBoard.colFills[col] < gameBoard.numRows:
@@ -262,17 +269,17 @@ class Player:
 			return best
 			
 
-	def hasAtleastOnePlayableSpace(self, gameBoard: Board, coordinates: list[tuple[int, int]]) -> int:
+	def hasAtleastOnePlayableSpace(self, gameBoard: Board, coordinates: list[tuple[int, int]]) -> bool:
 		"""
 		Docstring for hasAtleastOnePlayableSpace
 		
 		:param self: Description
-		:param gameBoard: Description
+		:param gameBoard: game board being considered
 		:type gameBoard: Board
-		:param coordinates: Description
+		:param coordinates: coordinates to check
 		:type coordinates: list[tuple[int, int]]
-		:return: Description
-		:rtype: int
+		:return: if the window has at least one playable space
+		:rtype: bool
 		"""
 		for row, col in coordinates:
 			if not (0 <= row < gameBoard.numRows and 0 <= col < gameBoard.numColumns):
@@ -288,11 +295,11 @@ class Player:
 		Docstring for numberOfFloatingSpaces
 		
 		:param self: Description
-		:param gameBoard: Description
+		:param gameBoard: game board being considered
 		:type gameBoard: Board
-		:param coordinates: Description
+		:param coordinates: coordinates to check
 		:type coordinates: list[tuple[int, int]]
-		:return: Description
+		:return: number of floating spaces in the window
 		:rtype: int
 		"""
 		count = 0
@@ -303,6 +310,25 @@ class Player:
 			if row < gameBoard.colFills[col] - 1:
 				count += 1
 		return count
+	
+
+	def isEmptyAndInBounds(self, gameBoard: Board, row: int, column: int) -> bool:
+		"""
+		Docstring for isEmptyAndInBounds
+		
+		:param self: Description
+		:param gameBoard: game board being considered
+		:type gameBoard: Board
+		:param row: row to check
+		:type row: int
+		:param column: column to check
+		:type column: int
+		:return: if the space is empty and in bounds
+		:rtype: bool
+		"""
+		if 0 <= row < gameBoard.numRows and 0 <= column < gameBoard.numColumns:
+			return gameBoard.checkSpace(row, column).value == " "
+		return False
 
 
 
@@ -311,14 +337,22 @@ class Player:
 		Docstring for evaluationFunction
 		
 		:param self: Description
-		:param gameBoard: Description
+		:param gameBoard: game board being evaluated
 		:type gameBoard: Board
-		:return: Description
+		:return: heuristic value of the game board
 		:rtype: int
 		"""
 		minimaxValue = 0
 		# checks combinations of length winNum for each direction (horizontal, vertical, diagonal \, diagonal /) for the number X and O pieces
-
+		# if a window contains both X and O pieces, it is ignored as it cannot lead to a win for either player
+		# if a window contains only X pieces, its contribution to the minimax value is positive and increases with the number of X pieces (exponentially)
+		# if a window contains only O pieces, its contribution to the minimax value is negative and increases with the number of O pieces (exponentially)
+		# if a window contains winNum pieces for either player, it returns infinity or negative infinity respectively
+		# if a window is floating (i.e., has no playable spaces) or is empty, the window is ignored
+		# the number of open ends (i.e., empty spaces at either end of the window) is also considered, with more open ends leading to a higher weight
+		# floating spaces within the window lead to a reduction in weight, as they are less likely to lead to a win
+		# overall, the evaluation function aims to quantify the advantage of the X player over the O player based on potential winning combinations on the board
+		
 		# checks the horizontal combinations
 		for col in range(gameBoard.numColumns - gameBoard.winNum + 1):
 			max_row = max(gameBoard.colFills[column] - 1 for column in range(col, min(col + gameBoard.winNum, gameBoard.numColumns)))
@@ -330,13 +364,6 @@ class Player:
 	
 				if window.count(' ') == gameBoard.winNum:
 					continue  # skip empty windows
-
-				openEnds = 0 # counts the number of open ends for the combination
-				if (x_count >= gameBoard.winNum-2) ^ (o_count >= gameBoard.winNum-2):
-					if window[0]:
-						openEnds += 1
-					if window[-1]:
-						openEnds += 1
 
 				# ensures that the combination is not floating
 				if self.hasAtleastOnePlayableSpace(gameBoard, [(row, col + i) for i in range(gameBoard.winNum)]):
@@ -351,10 +378,9 @@ class Player:
 						else:
 							weight = -1.5 * (10 ** o_count) * 0.5 ** self.numberOfFloatingSpaces(gameBoard, [(row, col + i) for i in range(gameBoard.winNum)])  # subtracts square of number of O pieces from value
 
-						if openEnds == 2: # higher weight for two open ends as it is more advantageous
-							weight *= 2
-						elif openEnds == 1:
-							weight *= 1.25
+						if (x_count == gameBoard.winNum - 1) or (o_count == gameBoard.winNum-1): # if one move away from winning, checkung if the same window can be used for 2 way win
+							if (window[0] == " " and self.isEmptyAndInBounds(gameBoard, row, col + gameBoard.winNum)) or (window[-1] == " " and self.isEmptyAndInBounds(gameBoard, row, col - 1)):  # if both ends are open (ie as _ X * winNum - 1 _), double the weight
+								weight *= 2
 
 						minimaxValue += weight
 
@@ -370,13 +396,6 @@ class Player:
 
 				if window.count(' ') == gameBoard.winNum:
 					continue  # skip empty windows
-			
-				openEnds = 0 # counts the number of open ends for the combination
-				if (x_count >= gameBoard.winNum-2) ^ (o_count >= gameBoard.winNum-2):
-					if window[0] == " ":
-						openEnds += 1
-					if window[-1] == " ":
-						openEnds += 1
 
 				# ensures that the combination is not floating
 				if self.hasAtleastOnePlayableSpace(gameBoard, [(row + i, col) for i in range(gameBoard.winNum)]):
@@ -390,11 +409,6 @@ class Player:
 							weight = (10 ** x_count) * 0.5 ** self.numberOfFloatingSpaces(gameBoard, [(row + i, col) for i in range(gameBoard.winNum)])
 						else:
 							weight = -1.5 * (10 ** o_count) * 0.5 ** self.numberOfFloatingSpaces(gameBoard, [(row + i, col) for i in range(gameBoard.winNum)])
-
-						if openEnds == 2:
-							weight *= 2
-						elif openEnds == 1:
-							weight *= 1.25
 
 						minimaxValue += weight
 
@@ -410,13 +424,6 @@ class Player:
 				if window.count(' ') == gameBoard.winNum:
 					continue
 
-				openEnds = 0 # counts the number of open ends for the combination
-				if (x_count >= gameBoard.winNum-2) ^ (o_count >= gameBoard.winNum-2):
-					if window[0] == " ":
-						openEnds += 1
-					if window[-1] == " ":
-						openEnds += 1
-
 				# ensures that the combination is not floating
 				if self.hasAtleastOnePlayableSpace(gameBoard, [(row + i, col + i) for i in range(gameBoard.winNum)]):
 					# for each set, checks that only one player's pieces are present
@@ -430,10 +437,9 @@ class Player:
 						else:
 							weight = -1.5 * (10 ** o_count) * 0.5 ** self.numberOfFloatingSpaces(gameBoard, [(row + i, col + i) for i in range(gameBoard.winNum)])
 
-						if openEnds == 2:
-							weight *= 2
-						elif openEnds == 1:
-							weight *= 1.25
+						if (x_count == gameBoard.winNum - 1) or (o_count == gameBoard.winNum-1): # if one move away from winning, checkung if the same window can be used for 2 way win
+							if (window[0] == " " and self.isEmptyAndInBounds(gameBoard, row + gameBoard.winNum, col + gameBoard.winNum)) or (window[-1] == " " and self.isEmptyAndInBounds(gameBoard, row - 1, col - 1)):  # if both ends are open (ie as _ X * winNum - 1 _), double the weight
+								weight *= 2
 
 						minimaxValue += weight
 
@@ -449,13 +455,6 @@ class Player:
 				# checks the number of X and O pieces in each combination of length winNum
 				x_count = window.count("X")
 				o_count = window.count("O")
-				
-				openEnds = 0 # counts the number of open ends for the combination
-				if (x_count >= gameBoard.winNum-2) ^ (o_count >= gameBoard.winNum-2):
-					if window[0] == " ":
-						openEnds += 1
-					if window[-1] == " ":
-						openEnds += 1
 
 				# ensures that the combination is not floating
 				if self.hasAtleastOnePlayableSpace(gameBoard, [(row + i, col - i) for i in range(gameBoard.winNum)]):
@@ -470,10 +469,9 @@ class Player:
 						else:
 							weight = -1.5 * (10 ** o_count) * 0.5 ** self.numberOfFloatingSpaces(gameBoard, [(row + i, col - i) for i in range(gameBoard.winNum)])
 
-						if openEnds == 2:
-							weight *= 2
-						elif openEnds == 1:
-							weight *= 1.25
+						if (x_count == gameBoard.winNum - 1) or (o_count == gameBoard.winNum-1): # if one move away from winning, checkung if the same window can be used for 2 way win
+							if (window[0] == " " and self.isEmptyAndInBounds(gameBoard, row + gameBoard.winNum, col - gameBoard.winNum)) or (window[-1] == " " and self.isEmptyAndInBounds(gameBoard, row + 1, col - 1)):  # if both ends are open (ie as _ X * winNum - 1 _), double the weight
+								weight *= 2
 
 						minimaxValue += weight
 		
